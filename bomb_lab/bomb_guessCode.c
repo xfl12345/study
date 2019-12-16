@@ -12,6 +12,13 @@ const long *addr_0x804a1d0[10] = {
     0x080495f7,0x080495fe,0x08049605,
     0x0804960c,0x08049613,0x0804961a
 };
+const long addr_0x804c200[17] = {
+    0x6, 0xe, 0x8, 0xf,
+    0x3, 0x2, 0x5, 0xd,
+    0x9, 0x1, 0x10, 0x7,
+    0x4, 0xc, 0xa, 0xb 
+};
+
 unsigned long eax = 0;
 unsigned long ebx = 0;
 unsigned long ecx = 0;
@@ -26,6 +33,8 @@ C was developed from 1969 to 1973 by Dennis Ritchie.
 1090519040 1102130821
 136 135 132 127 120 111 100 87 72
 131 852
+8 184
+0123456>
 */
 
 void explode_bomb()
@@ -108,6 +117,27 @@ ul read_n_numbers(char *str,ul *para2,ul para3)
     return 1;
 }
 
+ul func4(long para1)
+{
+    ul a;
+    if( para1 > 0)
+    {
+        if( para1 != 1 )//!
+        {
+            eax = func4(para1 - 1) + (func4(para1 - 2) >> 1);
+        }
+        else
+        {
+            eax = 26;
+        }
+    }
+    else
+    {
+        eax = 3;
+    }   
+    return eax;
+}
+
 ul phase_0(char *str)
 {
     if( strings_not_equal(str,addr_0x804a194) == 0)
@@ -123,16 +153,16 @@ ul phase_1(char *str)
     {
         double db;
         ul uLong;
-        unsigned long long uuLong;
+        //unsigned long long uuLong;
     }db_space;
     db_space.db = (double)0x112e8541;
-    uLongForHigh = (( 0xFFFFFFFF00000000&db_space.uuLong) >>32);
-    printf("%ld %ld",db_space.uLong,uLongForHigh);
+    //uLongForHigh = (( 0xFFFFFFFF00000000&db_space.uuLong) >>32);
+    printf("%ld %ld",db_space.uLong, (&db_space.uLong)[1]);
     if( sscanf(str,addr_0x804a1c9,&a,&b) == 2)
     {
         if(db_space.uLong != a)
             goto addr_0x80494fe;
-        if(uLongForHigh == b)
+        if((&db_space.uLong)[1] == b)
             return 1;
     }
     addr_0x80494fe:
@@ -183,11 +213,11 @@ ul phase_2(char *str)
 
 ul phase_3(char *str)
 {
-    ul kkk[6];//sub    $0x18,%esp ;esp = esp - 24
-    if( sscanf(str,addr_0x804a1c9,&kkk[1],&kkk[0]) > 1 )
+    ul pp[6];//sub    $0x18,%esp ;esp = esp - 24
+    if( sscanf(str,addr_0x804a1c9,&pp[1],&pp[0]) > 1 )
     {
-        kkk[3] = 0;
-        eax = kkk[1];
+        pp[3] = 0;
+        eax = pp[1];
         eax = eax - 0x7d;
         if( (unsigned)eax > (unsigned)8 )
         {
@@ -197,26 +227,26 @@ ul phase_3(char *str)
         eax = addr_0x804a1d0[eax];
         switch (eax)
         {
-            case 0x080495e2:kkk[3] += 0x354;//0
-            case 0x080495e9:kkk[3] += 0x37c;//1
-            case 0x080495f0:kkk[3] -= 0x354;//2
-            case 0x080495f7:kkk[3] += 0x354;//3
-            case 0x080495fe:kkk[3] += 0x37c;//4
-            case 0x08049605:kkk[3] -= 0x354;//5
-            case 0x0804960c:kkk[3] += 0x37c;//6
-            case 0x08049613:kkk[3] -= 0x37c;//7
-            case 0x0804961a:kkk[3] += 0x354;//8
+            case 0x080495e2:pp[3] += 0x354;//0
+            case 0x080495e9:pp[3] += 0x37c;//1
+            case 0x080495f0:pp[3] -= 0x354;//2
+            case 0x080495f7:pp[3] += 0x354;//3
+            case 0x080495fe:pp[3] += 0x37c;//4
+            case 0x08049605:pp[3] -= 0x354;//5
+            case 0x0804960c:pp[3] += 0x37c;//6
+            case 0x08049613:pp[3] -= 0x37c;//7
+            case 0x0804961a:pp[3] += 0x354;//8
                 break;
             default:
                 break;
         }
-        eax = kkk[1];
+        eax = pp[1];
         if(eax - 0x83 > 0)
         {
             explode_bomb();
             return 0;
         }
-        if(kkk[0] == kkk[3])
+        if(pp[0] == pp[3])
         {
             return 1;
         }
@@ -226,19 +256,58 @@ ul phase_3(char *str)
         explode_bomb();
         return 0;
     }
-    
     return 1;
 }
 
 ul phase_4(char *str)
 {
+    ul pp[6];//sub    $0x18,%esp ;esp = esp - 24
+    if( sscanf( str , addr_0x804a1c9 ,&pp[1],&pp[0]) != 2)
+    {
+        explode_bomb();
+        return 0;
+    }
+    if( pp[1] > 7 )
+    {
+        pp[2] = func4(pp[1]);
+        if( pp[0] == pp[2] )
+        {
+            return 1;
+        }
+    }
+    explode_bomb();
+    return 0;
+}
 
+ul phase_5(char *str)
+{
+    ul pp[6];//sub    $0x18,%esp ;esp = esp - 24
+    if( string_length(str) == 8 )
+    {
+        pp[2] = 0;
+        for ( pp[3]=0 ; pp[3]<=7 ; pp[3]++)
+        {
+            eax = (unsigned long)(*(pp[3] + str));
+            eax = (signed long)(eax & 0xFF);
+            eax = eax & 0xF;
+            eax = addr_0x804c200[eax];
+            pp[2] = pp[2] + eax;
+        }
+        if(pp[2] == 0x3f)//63
+            return 1;
+    }
+    explode_bomb();
+    return 0;
+}
+
+ul phase_6(char *str)
+{
+    //Doing!!!!!!
 }
 
 int main(void)
-{
-    char input[100]="131 852";
-    if(phase_3(input) == 1)
+{//phase_5
+    if(phase_5("0123456>") == 1)
     {
         printf("Yes!\n");
     }
@@ -248,6 +317,21 @@ int main(void)
     }
     return 0;
 }
+
+/*
+int main(void)
+{//phase_5
+    if(phase_5("0123456>") == 1)
+    {
+        printf("Yes!\n");
+    }
+    else
+    {
+        printf("No!\n");
+    }
+    return 0;
+}
+*/
 
 /*
 int main(void)
