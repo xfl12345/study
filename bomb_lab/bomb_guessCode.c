@@ -17,6 +17,7 @@ typedef unsigned long ul;
 */
 const char *addr_0x804a2fb = "DSecf";
 const char *addr_0x804a2f2 = "%d %d %s";
+const char *addr_0x804a1f4 = "Wow! You've defused the secret stage!";
 const char *addr_0x804a2d2 = "\nBOOM!!!";
 const char *addr_0x804a2db = "The bomb has blown up.";
 const char *addr_0x804a287 = ", \t";
@@ -50,6 +51,29 @@ struct p6_structVar addr_0x804c0e4[8] = {
     {9,2,&addr_0x804c0e4[4]},//node2 0x804c120
     {5,1,&addr_0x804c0e4[5]},//node1 0x804c12c
 };
+struct sp_structVar{
+    ul data;
+    struct sp_structVar *left;
+    struct sp_structVar *right;
+};
+struct sp_structVar addr_0x804c138[16] = {
+    {0x3e9,NULL,NULL},//n48 0x804c138
+    {0x2f,NULL,NULL},//n46 0x804c144
+    {0x14,NULL,NULL},//n43 0x804c150
+    {0x7,NULL,NULL},//n42 0x804c15c
+    {0x23,NULL,NULL},//n44 0x804c168
+    {0x63,NULL,NULL},//n47 0x804c174
+    {0x1,NULL,NULL},//n41 0x804c180
+    {0x28,NULL,NULL},//n45 0x804c18c
+    {0x6b,&addr_0x804c138[5],&addr_0x804c138[0]},//n34 0x804c198
+    {0x6,&addr_0x804c138[6],&addr_0x804c138[3]},//n31 0x804c1a4
+    {0x2d,&addr_0x804c138[7],&addr_0x804c138[1]},//n33 0x804c1b0
+    {0x16,&addr_0x804c138[2],&addr_0x804c138[4]},//n32 0x804c1bc
+    {0x32,&addr_0x804c138[10],&addr_0x804c138[8]},//n22 0x804c1c8
+    {0x8,&addr_0x804c138[9],&addr_0x804c138[11]},//n21 0x804c1d4
+    {0x24,&addr_0x804c138[13],&addr_0x804c138[12]},//n1 0x804c1e0
+};
+
 unsigned long eax = 0;
 unsigned long ebx = 0;
 unsigned long ecx = 0;
@@ -67,6 +91,7 @@ C was developed from 1969 to 1973 by Dennis Ritchie.
 8 184 DSecf
 0123456>
 3,5,7,6,1,4,2
+20
 */
 
 void explode_bomb()
@@ -416,11 +441,99 @@ ul phase_6(char *str)
     return 0;
 }
 
-ul secret_phase(char *str)
+long fun7(struct sp_structVar *sp_ptr,ul t)
 {
 
+    if( sp_ptr != NULL )
+    {
+        if(t >= sp_ptr->data)
+        {
+            if(t != sp_ptr->data)
+            {
+                return fun7(sp_ptr->right,t)*2 +1;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+        else
+        {
+            return fun7(sp_ptr->left,t)*2;
+        }
+    }
+    else
+    {
+        return -1;
+    }
+    return 0;
+}
+/**当然，秘密关卡没有形参，
+ * 是因为我懒得翻译read_line函数了。
+ * 如果非要翻译，会牵一发而动全身，
+ * 把整个程序完整翻译。
+ * 所以我干脆弄个形参，方便传递字符串
+*/
+ul secret_phase(char *str)
+{
+    long t,m;
+    char *str2 = str;
+    t = atoi(str2);
+    if(t <= 0)
+    {
+        explode_bomb();
+        return 0;
+    }
+    if(t <= 0x3e9)
+    {
+        m = fun7(&addr_0x804c138[14],t);
+        if(m == 2)
+        {
+            puts(addr_0x804a1f4);
+            return 1;
+        }
+        else
+        {
+            explode_bomb();
+            return 0;
+        }
+    }
+    explode_bomb();
+    return 0;
 }
 
+void boom_fun7()
+{
+    long arr[15*3+1],i;
+    for(i=0 ; i<15 ; i++)
+    {
+        arr[i*3] = addr_0x804c138[i].data;
+        arr[i*3 +1] = addr_0x804c138[i].data -1;
+        arr[i*3 +2] = addr_0x804c138[i].data +1;
+    }
+    for(i=0 ; i<15*3 ; i++)
+        printf("%ld ",arr[i]);
+    putchar('\n');
+    for(i=0 ; i<15*3 ; i++)
+    {
+        printf("No.%-6ld:InputNum=%-6ld,fun7_output=%ld\n",i+1,arr[i],fun7(&addr_0x804c138[14],arr[i]));
+    }
+    return;
+}
+void kaboom_fun7()
+{
+    long i;
+    for(i=0 ; i<0x3e9 ; i++)
+    {
+        if(fun7(&addr_0x804c138[14],i) == 2)
+            printf("InputNum=%-6ld,fun7_output=%ld\n",i,2);
+    }
+}
+int main()
+{
+    kaboom_fun7();
+    return 0;
+}
 
 /*
 int main(void)
@@ -451,10 +564,10 @@ int main(void)
     return 0;
 }
 
-/**/
+/*
 int main(void)
 {//phase_4
-    if(phase_4("8 184 123") == 1)
+    if(phase_4("8 184 DSecf") == 1)
     {
         printf("Yes!\n");
     }
