@@ -2,6 +2,23 @@
 #include<string.h>
 #include<stdlib.h>
 typedef unsigned long ul;
+/**秘密关卡会在某一关之后触发，
+ * 根据此程序的反编译结果来看，
+ * 每一关的字符串都会被保存起来
+ * 在地址0x804c24c存放着当前关卡的编号
+ * 根据地址0x8049e10可知，当且仅当过了第7关
+ * 才会顺序执行到0x8049e15
+ * sscanf(phase_4输入的字符串,0x804a2f2,&a,&b,str_ptr)
+ * 然后对比str_ptr 与 0x804a2fb 是否一致，
+ * 如果一致，将顺序执行到0x8049e57
+ * 然后它会告诉你你确实找到了秘密关卡，
+ * 没有任何秘密关卡参数传入，秘密关卡自己会接收用户输入
+ * 
+*/
+const char *addr_0x804a2fb = "DSecf";
+const char *addr_0x804a2f2 = "%d %d %s";
+const char *addr_0x804a2d2 = "\nBOOM!!!";
+const char *addr_0x804a2db = "The bomb has blown up.";
 const char *addr_0x804a287 = ", \t";
 const char *addr_0x804a28b = "%d";
 const char *addr_0x804a1c9 = "%d %d";
@@ -18,7 +35,21 @@ const long addr_0x804c200[17] = {
     0x9, 0x1, 0x10, 0x7,
     0x4, 0xc, 0xa, 0xb 
 };
+struct p6_structVar{
+    ul a;
+    ul b;
+    struct p6_structVar *c;
+};
 
+struct p6_structVar addr_0x804c0e4[8] = {
+    {3,7,NULL},//node7 0x804c0e4
+    {4,6,&addr_0x804c0e4[0]},//node6 0x804c0f0
+    {1,5,&addr_0x804c0e4[1]},//node5 0x804c0fc
+    {7,4,&addr_0x804c0e4[2]},//node4 0x804c108
+    {0,3,&addr_0x804c0e4[3]},//node3 0x804c114
+    {9,2,&addr_0x804c0e4[4]},//node2 0x804c120
+    {5,1,&addr_0x804c0e4[5]},//node1 0x804c12c
+};
 unsigned long eax = 0;
 unsigned long ebx = 0;
 unsigned long ecx = 0;
@@ -33,14 +64,15 @@ C was developed from 1969 to 1973 by Dennis Ritchie.
 1090519040 1102130821
 136 135 132 127 120 111 100 87 72
 131 852
-8 184
+8 184 DSecf
 0123456>
+3,5,7,6,1,4,2
 */
 
 void explode_bomb()
 {
-    printf("爆炸！\n");
-    exit(0);
+    puts(addr_0x804a2d2);
+    puts(addr_0x804a2db);
 }
 
 ul string_length(char *str)
@@ -90,29 +122,26 @@ ul strings_not_equal(char *str1,char *str2)
 
 ul read_n_numbers(char *str,ul *para2,ul para3)
 {
-    unsigned long pp[6];   //sub    $0x18,%esp         ;栈生长24字节
-    pp[2] = 0;             //movl   $0x0,-0x10(%ebp)	;由此可见，内存(ebp - 16)~(ebp - 12)是一个long型变量，不妨记为a
-    while(pp[2] < para3)
+    //sub    $0x18,%esp;栈生长24字节
+    char *str2;
+    long i = 0;//movl   $0x0,-0x10(%ebp);
+    while(i < para3)
     {
-        if( pp[2] - 0 != 0 )
+        if( i - 0 != 0 )
         {
-            pp[3]=strtok(NULL,addr_0x804a287);
+            str2=strtok(NULL,addr_0x804a287);
         }
         else
         {
-            pp[3]=strtok(str,addr_0x804a287);
+            str2=strtok(str,addr_0x804a287);
         }
-        if(pp[3] == NULL)
+        if(str2 == NULL)
         {
             explode_bomb();
             return 0;
         }
-        eax = pp[2];
-        edx = eax*4;
-        eax = para2;
-        eax = edx + eax;
-        if( sscanf(pp[3],addr_0x804a28b,eax) > 0)
-            pp[2] = pp[2] + 1;
+        if( sscanf(str2,addr_0x804a28b,para2+i) > 0)
+            i++;
     }
     return 1;
 }
@@ -124,18 +153,18 @@ ul func4(long para1)
     {
         if( para1 != 1 )//!
         {
-            eax = func4(para1 - 1) + (func4(para1 - 2) >> 1);
+            a = func4(para1 - 1) + (func4(para1 - 2) >> 1);
         }
         else
         {
-            eax = 26;
+            a = 26;
         }
     }
     else
     {
-        eax = 3;
+        a = 3;
     }   
-    return eax;
+    return a;
 }
 
 ul phase_0(char *str)
@@ -172,43 +201,36 @@ ul phase_1(char *str)
 
 ul phase_2(char *str)
 {
-    ul pp[14],i;
-    if(read_n_numbers(str,&pp[2],9) != 0)
+    //esp = esp - 0x38
+    ul num[10],i,m;
+    if(read_n_numbers(str,num,9) != 0)
     {
-        for(i=0;i<9;i++)
-            printf("%ld ",pp[2+i]);
-        if(pp[2] - 136 == 0)
+        //for(i=0;i<9;i++)
+        //    printf("%ld ",num[i]);//Debug
+        if(num[0] - 136 == 0)
         {
-            pp[11]=1;
-            while(pp[2] - 8 < 0)
+            m=1;
+            while(num[0] - 8 < 0)
             {
-                eax = pp[2 + pp[11]];
-                edx = pp[2 + (pp[11]-1)];
-                edx = edx - (pp[11] + pp[11]);
-                edx++;
-                if(eax - edx == 0)
+                if(num[m] == (num[m-1]-(m+m) +1))
                 {
-                    pp[11]++;
+                    m++;
                 }
                 else
                 {
                     explode_bomb();
-                    eax = 0;
+                    return 0;
                 }
             }
-            eax = 1;
+            return 1;
         }
         else
         {
             explode_bomb();
-            eax = 0;
+            return 0;
         }
     }
-    else
-    {
-        eax = 0;
-    }
-    return eax;
+    return 0;
 }
 
 ul phase_3(char *str)
@@ -262,7 +284,7 @@ ul phase_3(char *str)
 ul phase_4(char *str)
 {
     ul pp[6];//sub    $0x18,%esp ;esp = esp - 24
-    if( sscanf( str , addr_0x804a1c9 ,&pp[1],&pp[0]) != 2)
+    if( pp[3] = sscanf( str , addr_0x804a1c9 ,&pp[1],&pp[0]) != 2)
     {
         explode_bomb();
         return 0;
@@ -290,10 +312,10 @@ ul phase_5(char *str)
             eax = (unsigned long)(*(pp[3] + str));
             eax = (signed long)(eax & 0xFF);
             eax = eax & 0xF;
-            eax = addr_0x804c200[eax];
+            eax = addr_0x804c200[eax];//从一个数组里选取8个数字
             pp[2] = pp[2] + eax;
         }
-        if(pp[2] == 0x3f)//63
+        if(pp[2] == 0x3f)//0x3f=63，即要求这个8个数字之和等于63
             return 1;
     }
     explode_bomb();
@@ -302,12 +324,109 @@ ul phase_5(char *str)
 
 ul phase_6(char *str)
 {
-    //Doing!!!!!!
+    //sub    $0x58,%esp ;esp = esp - 88
+    //ebp-0x50,ebp-0x34
+    struct p6_structVar *svar_arr[7];
+    ul num[7];//esp[2],esp[9]
+    //ebp-0x18
+    struct p6_structVar *svar_ptr1;//esp[16]
+    ul m,n;//esp[17],esp[18]
+    struct p6_structVar *svar_ptr2;//esp[19]
+    svar_ptr1 = &addr_0x804c0e4[6];//0x804c12c
+    if( read_n_numbers(str,num,7) )//0x80497a7
+    {
+        //n=0;//0x80497b3:	c7 45 f0 00 00 00 00 	movl   $0x0,-0x10(%ebp);*(ebp - 16) = 0
+        //n++;//0x8049818:addl   $0x1,-0x10(%ebp)
+        //n<=6//0x8049820
+        //开始遍历输入的7个数字
+        for ( n=0 ; n<=6 ; n++)
+        {
+            //0x80497bc:mov    -0x10(%ebp),%eax	
+            //这7个数字都不能小于等于零
+            if( num[n] <= 0 )//0x80497c5
+            {
+                explode_bomb();
+                return 0;
+            }
+            //0x80497c7:mov    -0x10(%ebp),%eax
+            //这7个数字都不得大于7
+            if( num[n] <= 7 )//0x80497e2
+            {
+                m = n+1;//0x80497e8
+                //查重，7个数字都不允许重复
+                while(m <= 6)//0x8049816
+                {
+                    //80497ed:mov    -0x10(%ebp),%eax
+                    if( num[n] != num[m] )
+                    {
+                        m++;
+                    }
+                    else
+                    {
+                        explode_bomb();
+                        return 0;
+                    }
+                }
+            }
+            else
+            {
+                explode_bomb();
+                return 0;
+            }
+        }
+        //0x8049822:movl   $0x0,-0x10(%ebp)
+        //n<=6//0x8049865
+        for (n=0 ; n<=6 ; n++)
+        {
+            svar_ptr2 = svar_ptr1;//0x804982b:mov -0x18(%ebp),%eax;mov %eax,-0xc(%ebp)
+            //m = 1;//0x8049831
+            //m++;//0x8049843
+            //定位到链表的第num[n]个节点
+            for(m=1 ; m<num[n] ; m++)//m < num[n]//0x8049851
+                svar_ptr2 = svar_ptr2->c;
+            svar_arr[n] = svar_ptr2;//0x8049853  //存储当前节点，也就是说这个函数是把用户输入的7个数字当做下标，对原有链表进行了排序，节点地址顺序存储在svar_arr数组里面
+        }
+        svar_ptr1 = svar_arr[0];//0x8049867
+        svar_ptr2 = svar_ptr1;
+        //n++;//0x8049892
+        //按数组存储的节点顺序，重构这个链表结构
+        for (n=1 ; n<=6 ; n++)//addr_8049896
+        {
+            svar_ptr2->c = svar_arr[n];
+            svar_ptr2 = svar_ptr2->c;//0x804988f
+        }
+        svar_ptr2->c = NULL;//尾节点没有下一个节点地址
+        svar_ptr2 = svar_ptr1;
+        //n = 0;//addr_80498ac
+        //遍历这个链表
+        for (n=0 ; n<=5 ; n++)
+        {   //要求每个节点的下一个节点的a值要大于等于自身a值
+            if(svar_ptr2->a  <=  (svar_ptr2->c)->a )
+            {
+                svar_ptr2 = svar_ptr2->c;
+            }
+            else
+            {
+                explode_bomb();
+                return 0;
+            }
+        }
+        return 1;
+    }
+    return 0;
 }
 
+ul secret_phase(char *str)
+{
+
+}
+
+
+/*
 int main(void)
-{//phase_5
-    if(phase_5("0123456>") == 1)
+{//phase_6
+    char input[]="3,5,7,6,1,4,2";
+    if(phase_6(input) == 1)
     {
         printf("Yes!\n");
     }
@@ -331,12 +450,11 @@ int main(void)
     }
     return 0;
 }
-*/
 
-/*
+/**/
 int main(void)
-{//phase_1
-    if(phase_1("1090519040 1102130821") == 1)
+{//phase_4
+    if(phase_4("8 184 123") == 1)
     {
         printf("Yes!\n");
     }
@@ -346,7 +464,6 @@ int main(void)
     }
     return 0;
 }
-*/
 
 /*
 int main(void)
@@ -362,19 +479,13 @@ int main(void)
     }
     return 0;
 }
-*/
 
 /*
 int main(void)
-{//read_n_numbers
-    char input[50]="1,9,2";
-    long i;
-    unsigned long result[50]={0};
-    if(read_n_numbers(input,result,3) == 1)
+{//phase_1
+    if(phase_1("1090519040 1102130821") == 1)
     {
         printf("Yes!\n");
-        for(i=0;i<3;i++)
-            printf("%ld",result[i]);
     }
     else
     {
@@ -382,8 +493,25 @@ int main(void)
     }
     return 0;
 }
-*/
 
+/*
+int main(void)
+{//read_n_numbers
+    char input[50]="3,5,7,6,1,4,2";
+    long i;
+    unsigned long result[50]={0};
+    if(read_n_numbers(input,result,7) == 1)
+    {
+        printf("Yes!\n");
+        for(i=0;i<7;i++)
+            printf("%ld ",result[i]);
+    }
+    else
+    {
+        printf("No!\n");
+    }
+    return 0;
+}
 
 
 /**
