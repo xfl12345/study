@@ -100,7 +100,7 @@ void explode_bomb()
     puts(addr_0x804a2db);
 }
 
-ul string_length(char *str)
+ul string_length_origin(char *str)
 {
     char *ptr;
     long count;                     //sub    $0x10,%esp;
@@ -114,6 +114,20 @@ ul string_length(char *str)
     return count;                   //mov    -0x4(%ebp),%eax;leave;ret;
 }
 
+ul string_length(char *str)
+{
+    char *ptr;
+    long count;                     //sub    $0x10,%esp;
+    ptr = str;                      //mov    0x8(%ebp),%eax;mov    %eax,-0x8(%ebp);
+    count = (long)0;                //movl   $0x0,-0x4(%ebp);
+    while (  ((eax&0xff) & (eax&0xff)) != 0  )
+    {
+        ptr = ptr + 1;     //addl   $0x1,-0x8(%ebp);
+        count = count + 1;              //addl   $0x1,-0x4(%ebp);
+        eax = (long)(*ptr);  //mov    -0x8(%ebp),%eax;movzbl (%eax),%eax;
+    }
+    return count;                   //mov    -0x4(%ebp),%eax;leave;ret;
+}
 ul strings_not_equal(char *str1,char *str2)
 {
     ul a,d;
@@ -227,7 +241,7 @@ ul phase_1(char *str)
 ul phase_2(char *str)
 {
     //esp = esp - 0x38
-    ul num[10],i,m;
+    ul num[10],m;
     if(read_n_numbers(str,num,9) != 0)
     {
         //for(i=0;i<9;i++)
@@ -235,7 +249,7 @@ ul phase_2(char *str)
         if(num[0] - 136 == 0)
         {
             m=1;
-            while(num[0] - 8 < 0)
+            while(m <= 8)
             {
                 if(num[m] == (num[m-1]-(m+m) +1))
                 {
@@ -529,11 +543,6 @@ void kaboom_fun7()
             printf("InputNum=%-6ld,fun7_output=%ld\n",i,2);
     }
 }
-int main()
-{
-    kaboom_fun7();
-    return 0;
-}
 
 /*
 int main(void)
@@ -578,7 +587,7 @@ int main(void)
     return 0;
 }
 
-/*
+/**/
 int main(void)
 {//phase_2
     char input[50]="136 135 132 127 120 111 100 87 72";
