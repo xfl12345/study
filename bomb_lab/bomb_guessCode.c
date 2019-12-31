@@ -220,20 +220,21 @@ ul phase_1(char *str)
     union try
     {
         double db;
-        ul uLong;
+        struct try2{
+            ul low32bit;
+            ul high32bit;
+        }db_in_int64;
         //unsigned long long uuLong;
     }db_space;
     db_space.db = (double)0x112e8541;
     //uLongForHigh = (( 0xFFFFFFFF00000000&db_space.uuLong) >>32);
-    printf("%ld %ld",db_space.uLong, (&db_space.uLong)[1]);
+    //printf("%ld %ld",db_space.db_in_int64.low32bit, db_space.db_in_int64.high32bit);
     if( sscanf(str,addr_0x804a1c9,&a,&b) == 2)
     {
-        if(db_space.uLong != a)
-            goto addr_0x80494fe;
-        if((&db_space.uLong)[1] == b)
+        if(db_space.db_in_int64.low32bit == a && \
+            db_space.db_in_int64.high32bit == b)
             return 1;
     }
-    addr_0x80494fe:
     explode_bomb();
     return 0;
 }
