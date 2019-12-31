@@ -49,7 +49,7 @@ struct p6_structVar addr_0x804c0e4[8] = {
     {7,4,&addr_0x804c0e4[2]},//node4 0x804c108
     {0,3,&addr_0x804c0e4[3]},//node3 0x804c114
     {9,2,&addr_0x804c0e4[4]},//node2 0x804c120
-    {5,1,&addr_0x804c0e4[5]},//node1 0x804c12c
+    {5,1,&addr_0x804c0e4[5]}//node1 0x804c12c
 };
 struct sp_structVar{
     ul data;
@@ -71,7 +71,7 @@ struct sp_structVar addr_0x804c138[16] = {
     {0x16,&addr_0x804c138[2],&addr_0x804c138[4]},//n32 0x804c1bc
     {0x32,&addr_0x804c138[10],&addr_0x804c138[8]},//n22 0x804c1c8
     {0x8,&addr_0x804c138[9],&addr_0x804c138[11]},//n21 0x804c1d4
-    {0x24,&addr_0x804c138[13],&addr_0x804c138[12]},//n1 0x804c1e0
+    {0x24,&addr_0x804c138[13],&addr_0x804c138[12]}//n1 0x804c1e0
 };
 
 unsigned long eax = 0;
@@ -506,11 +506,6 @@ ul secret_phase(char *str)
         {
             puts(addr_0x804a1f4);
             return 1;
-        }
-        else
-        {
-            explode_bomb();
-            return 0;
         }
     }
     explode_bomb();
